@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <title>Micro:bit 데이터 로거</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <!-- SheetJS (xlsx) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <!-- 커스텀 스타일 -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body class="bg-slate-50 min-h-screen flex flex-col">
+
+  <!-- HEADER -->
+  <header class="flex items-center justify-between px-4 py-3 bg-white shadow">
+    <h1 class="text-lg font-semibold">Micro:bit 데이터 로거</h1>
+
+    <div class="flex items-center gap-2">
+      <button id="btn-connect"
+              class="px-3 py-1.5 rounded text-sm bg-blue-500 text-white">
+        Connect
+      </button>
+      <span id="device-name"
+            class="text-xs text-blue-600 font-semibold"></span>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="flex-1 p-4 space-y-4">
+
+    <!-- SENSOR SELECT PANEL -->
+    <section class="bg-white rounded-xl shadow p-4 space-y-3">
+      <h2 class="font-semibold text-sm mb-1">센서 선택</h2>
+
+      <div>
+        <p class="text-xs text-slate-500 mb-1">자동 감지 센서</p>
+        <div id="basic-sensor-list" class="flex flex-wrap gap-3 text-sm"></div>
+      </div>
+
+      <div>
+        <p class="text-xs text-slate-500 mb-1">핀(P0, P1, P2...) 센서</p>
+        <div id="pin-sensor-list" class="flex flex-wrap gap-3 text-sm"></div>
+      </div>
+
+      <div class="flex items-center gap-2 pt-2 border-t border-slate-200">
+        <input id="chk-keep-screen-on" type="checkbox" class="w-4 h-4">
+        <label for="chk-keep-screen-on" class="text-xs">
+          로깅 중 화면 꺼짐 방지하기
+        </label>
+        <span id="keep-screen-on-hint"
+              class="text-[11px] text-slate-400 ml-1"></span>
+      </div>
+
+      <div class="flex items-center gap-2 pt-2 border-t border-slate-200">
+        <button id="btn-start"
+                class="px-3 py-1.5 rounded text-sm bg-emerald-500 text-white">
+          Start Logging
+        </button>
+        <button id="btn-stop"
+                class="px-3 py-1.5 rounded text-sm bg-slate-300 text-slate-700"
+                disabled>
+          Stop
+        </button>
+      </div>
+
+      <p class="text-[11px] text-slate-400">
+        센서 이름을 클릭하면 라벨을 수정할 수 있어요. (예: P0 → 토양 수분 센서)
+      </p>
+    </section>
+
+    <!-- GRAPH + TABLE -->
+    <section class="grid gap-4 md:grid-cols-2">
+
+      <!-- GRAPH -->
+      <div class="bg-white rounded-xl shadow p-4">
+        <h2 class="font-semibold text-sm mb-2">실시간 그래프</h2>
+        <canvas id="chart-canvas"
+                class="w-full h-56 md:h-64 lg:h-72"></canvas>
+      </div>
+
+      <!-- TABLE -->
+      <div class="bg-white rounded-xl shadow p-4">
+        <h2 class="font-semibold text-sm mb-2">데이터 테이블</h2>
+        <div id="table-container"
+             class="overflow-auto max-h-64 md:max-h-72 lg:max-h-80">
+          <table class="min-w-full text-xs border border-slate-200">
+            <thead id="data-table-head" class="bg-slate-100"></thead>
+            <tbody id="data-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- EXPORT & RESET -->
+    <section class="flex flex-wrap items-center gap-2">
+      <button id="btn-download"
+              class="px-3 py-1.5 rounded text-sm bg-indigo-500 text-white">
+        엑셀(xlsx)로 다운로드
+      </button>
+
+      <button id="btn-clear"
+              class="px-3 py-1.5 rounded text-sm bg-slate-200 text-slate-700">
+        데이터 초기화
+      </button>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="px-4 py-2 text-[11px] text-slate-400 bg-slate-100">
+    BoundaryX · Micro:bit 데이터 로거 v1.0  
+    (Chrome/Edge 브라우저 권장, Web Bluetooth 기반)
+  </footer>
+
+  <!-- 메인 스크립트 -->
+  <script src="main.js"></script>
+</body>
+</html>

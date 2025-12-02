@@ -1,0 +1,7 @@
+/* 데이터 테이블 헤더를 스크롤해도 항상 위에 고정 */
+#data-table-head th {
+  position: sticky;
+  top: 0;
+  background-color: #f1f5f9; /* Tailwind slate-100 */
+  z-index: 20;
+}
