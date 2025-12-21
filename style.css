@@ -1,193 +1,122 @@
-/* style.css - Boundary X: Data Streamer Final */
+/* --- Dashboard Layout (New) --- */
 
-:root {
-  /* Palette */
-  --primary: #000000;
-  --primary-hover: #333333;
-  --accent-grey: #F8F9FA;
-  --border-color: #D1D5DB;
-  
-  --bg-color: #FFFFFF;
-  --text-main: #111111;
-  --text-sub: #666666;
-  
-  --danger: #EA4335;
-  --success: #137333;
-  --excel: #1D6F42;
-  
-  /* Shapes */
-  --radius-pill: 50px;
-  --radius-card: 16px;
-  
-  --font-family: 'Pretendard', -apple-system, sans-serif;
+/* 메인 컨테이너: 최대 너비 늘림 (그래프 시인성 확보) */
+main { 
+    width: 100%; 
+    max-width: 1400px; /* 더 넓게 */
+    margin: 0 auto; 
+    padding: 2rem 1.5rem; 
+    flex: 1; 
 }
 
-* { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--font-family); }
-
-body {
-  background-color: var(--bg-color);
-  color: var(--text-main);
-  line-height: 1.6;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+/* 대시보드 그리드 컨테이너 */
+.dashboard-container {
+    display: grid;
+    gap: 1.5rem;
+    /* 모바일 기본: 1열 */
+    grid-template-columns: 1fr; 
 }
 
-/* Header */
-header {
-  background: #000000;
-  border-bottom: 1px solid #333;
-  padding: 1rem 5vw;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-.title { font-size: 1.25rem; font-weight: 700; color: #FFFFFF; display: flex; align-items: center; gap: 12px; }
-.title img { height: 28px; width: auto; }
-.back-button {
-  text-decoration: none; color: #FFFFFF; border: 1px solid #FFFFFF;
-  font-size: 0.9rem; font-weight: 500; padding: 0.5rem 1.2rem;
-  border-radius: var(--radius-pill); transition: all 0.2s;
-}
-.back-button:hover { background: #FFFFFF; color: #000000; }
-
-/* Main Layout */
-main { width: 100%; max-width: 1000px; margin: 0 auto; padding: 3rem 1.5rem; flex: 1; }
-.controls { display: flex; flex-direction: column; gap: 32px; }
-
+/* 개별 카드 스타일 정리 */
 .control-group {
-  background: var(--accent-grey);
-  padding: 2.5rem;
-  border-radius: var(--radius-card);
-  border: 1px solid var(--border-color);
+    background: var(--accent-grey);
+    padding: 1.5rem;
+    border-radius: var(--radius-card);
+    border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    height: 100%; /* 높이 채우기 */
 }
 
-.control-group h3 {
-  background: transparent;
-  color: #000000;
-  border-left: 6px solid #000000;
-  padding-left: 1rem;
-  font-size: 1.3rem;
-  font-weight: 800; 
-  margin-bottom: 1rem;
-  line-height: 1.1;
-  display: flex;
-  align-items: center;
+/* PC 화면 (폭 1024px 이상)에서 2단 분리 */
+@media (min-width: 1024px) {
+    .dashboard-container {
+        /* 좌측 350px 고정, 우측 나머지 */
+        grid-template-columns: 350px 1fr; 
+        align-items: start;
+    }
+
+    .dashboard-sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        /* 스크롤 시 좌측 메뉴 고정 (Sticky) */
+        position: sticky;
+        top: 90px; 
+    }
+
+    .dashboard-main {
+        min-width: 0; /* Grid overflow 방지 */
+    }
+
+    /* 우측 모니터링 패널 내부 그래프/테이블 배치 */
+    .monitor-content {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        height: 100%;
+    }
+    
+    /* 그래프를 더 크게 */
+    .chart-wrapper {
+        height: 400px !important; /* PC에서는 그래프 더 높게 */
+    }
 }
 
-.control-group p { color: var(--text-sub); font-size: 0.95rem; margin-bottom: 1.5rem; }
+/* --- Component Styles --- */
 
-/* Buttons */
-.button-group { display: flex; gap: 12px; flex-wrap: wrap; }
-button {
-  cursor: pointer; border: none; font-size: 0.95rem; font-weight: 600;
-  padding: 0.9rem 1.5rem; border-radius: var(--radius-pill); transition: all 0.2s;
-  display: inline-flex; align-items: center; justify-content: center;
-}
-button:disabled { opacity: 0.5; cursor: not-allowed; }
-.flex-1 { flex: 1; }
+.full-height { height: 100%; }
 
-.start-button { background-color: var(--primary); color: white; }
-.start-button:hover:not(:disabled) { background-color: var(--primary-hover); transform: translateY(-2px); }
-
-.stop-button { background-color: white; color: var(--danger); border: 1px solid var(--border-color); }
-.stop-button:hover:not(:disabled) { background-color: #FFF5F5; border-color: var(--danger); }
-
-.excel-button { background-color: transparent; color: var(--excel); border: 1px solid var(--excel); }
-.excel-button:hover:not(:disabled) { background-color: var(--excel); color: white; transform: translateY(-2px); }
-
-/* Status Messages */
-#bluetoothStatus {
-  margin-top: 1rem; padding: 1rem; border-radius: var(--radius-card);
-  font-size: 1rem; text-align: center; font-weight: 700;
-  background-color: #F1F3F4; color: #333; border: 1px solid var(--border-color);
-}
-.status-connected { background-color: #E6F4EA !important; color: var(--success) !important; border-color: var(--success) !important; }
-.status-error { background-color: #FCE8E6 !important; color: var(--danger) !important; border-color: var(--danger) !important; }
-
-/* Sensor Config */
-.sensor-config-box {
-    background: #fff; border: 1px solid var(--border-color);
-    border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;
-}
-.sensor-category { margin-bottom: 1.2rem; }
-.category-title {
-    display: block; font-size: 0.9rem; font-weight: 700; color: #333; margin-bottom: 0.5rem;
-}
-.sensor-list { display: flex; flex-wrap: wrap; gap: 10px; }
-.guide-text { font-size: 0.8rem; color: #999; margin-top: 0.5rem; }
-
-.checkbox-wrapper {
-    display: flex; align-items: center; gap: 8px; margin-bottom: 1.5rem;
-    padding: 0.8rem; background: #fff; border-radius: 8px; border: 1px solid var(--border-color);
-}
-.checkbox-wrapper input { width: 18px; height: 18px; accent-color: black; margin-right: 8px; }
-.checkbox-wrapper label { font-size: 0.95rem; cursor: pointer; font-weight: 500; }
-#keep-screen-on-hint { font-size: 0.8rem; color: var(--danger); margin-left: auto; }
-
-/* Monitor Grid (Responsive Fixes) */
-.monitor-grid {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;
+.monitor-header {
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 1rem;
 }
 
+/* 모니터 박스 (그래프/테이블 감싸는 흰색 박스) */
 .monitor-box {
-    background: white; border: 1px solid var(--border-color);
-    border-radius: 12px; padding: 1.5rem; 
-    display: flex; flex-direction: column;
-    /* [중요] 모바일 오버플로우 방지 */
-    min-width: 0; width: 100%;
+    background: white; 
+    border: 1px solid var(--border-color);
+    border-radius: 12px; 
+    padding: 1.5rem; 
+    min-width: 0;
+    width: 100%;
 }
-.monitor-box h4 { font-size: 1rem; font-weight: 700; margin-bottom: 1rem; }
 
-.chart-wrapper { position: relative; height: 300px; width: 100%; }
+.chart-wrapper {
+    position: relative; 
+    height: 300px; /* 기본 높이 */
+    width: 100%;
+}
 
 .table-wrapper { 
-    height: 300px; overflow-y: auto; 
-    /* [중요] 테이블 가로 스크롤 허용 */
+    height: 250px; /* 테이블 높이 고정 */
+    overflow-y: auto; 
     overflow-x: auto;
-    border: 1px solid #eee; border-radius: 8px; width: 100%;
+    border: 1px solid #eee; 
+    border-radius: 8px; 
+    width: 100%;
 }
 
-.data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-.data-table th { 
-    position: sticky; top: 0; background: #f9fafb; z-index: 10;
-    padding: 8px; text-align: left; border-bottom: 1px solid #ddd; font-weight: 600; white-space: nowrap;
+/* 센서 리스트 스타일 보완 */
+.sensor-list { 
+    display: flex; 
+    flex-wrap: wrap; 
+    gap: 8px; 
 }
-.data-table td { padding: 8px; border-bottom: 1px solid #eee; font-family: monospace; white-space: nowrap; }
-.data-table td:not(:first-child) { text-align: right; }
 
-/* Footer */
-footer { background-color: #000000; color: #FFFFFF; padding: 4rem 5vw 4rem; border-top: 1px solid #222; margin-top: auto; font-size: 0.9rem; }
-.footer-container { max-width: 1000px; margin: 0 auto; display: flex; flex-direction: column; }
-.footer-top { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4rem; }
-.footer-info { flex: 1; min-width: 280px; display: flex; flex-direction: column; }
-.footer-logo { font-size: 1.2rem; font-weight: 700; margin-bottom: 1rem; color: #FFFFFF; }
-.slogan { font-size: 0.95rem; color: #CCCCCC; font-weight: 400; margin-bottom: 1.5rem; line-height: 1.5; word-break: keep-all; }
-address { font-style: normal; color: #888; line-height: 1.6; }
-.copyright { margin-top: 0.8rem; font-size: 0.8rem; color: #666; }
-.footer-links { display: flex; gap: 4rem; flex-wrap: wrap; }
-.link-column h4 { font-size: 0.95rem; font-weight: 700; color: #FFFFFF; margin-bottom: 1.2rem; }
-.link-column ul { list-style: none; padding: 0; }
-.link-column li { margin-bottom: 1.2rem; display: flex; flex-direction: column; gap: 4px; }
-.link-column a { text-decoration: none; color: #CCCCCC; font-weight: 500; transition: color 0.2s; }
-.link-column a:hover { color: #FFFFFF; text-decoration: underline; text-underline-offset: 4px; }
-.link-desc { font-size: 0.8rem; color: #666; }
+/* 버튼 그룹 간격 */
+.button-group { 
+    display: flex; 
+    gap: 10px; 
+}
+.button-group button {
+    padding: 0.8rem; /* 버튼 높이 살짝 줄임 */
+}
 
-/* Mobile Response */
+/* 모바일 대응 보완 */
 @media (max-width: 768px) {
-  .footer-top { flex-direction: column; gap: 3rem; }
-  .footer-links { gap: 2.5rem; flex-direction: column; }
-  
-  /* 모바일 그래프/테이블 세로 배치 */
-  .monitor-grid { grid-template-columns: 1fr; } 
-  
-  .title { font-size: 1rem; }
-  .title img { height: 20px; }
-  
-  /* 모바일 패딩 축소 */
-  .control-group { padding: 1.5rem 1rem; }
-  .monitor-box { padding: 1rem; }
+    main { padding: 1rem; }
+    .control-group { padding: 1.2rem; }
+    .chart-wrapper { height: 250px !important; }
 }
