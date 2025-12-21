@@ -1,3 +1,5 @@
+// main.js - Boundary X Bluetooth Data Streamer Logic
+
 // ===============================
 // 전역 상태
 // ===============================
@@ -10,10 +12,10 @@ let bleBuffer = "";
 let isLogging = false;
 let wakeLock = null;
 
-const MAX_POINTS = 200;
+const MAX_POINTS = 100;
 
 // ===============================
-// DOM
+// DOM Elements
 // ===============================
 const btnConnect = document.getElementById("btn-connect");
 const btnStart = document.getElementById("btn-start");
@@ -21,24 +23,23 @@ const btnStop = document.getElementById("btn-stop");
 const btnDownload = document.getElementById("btn-download");
 const btnClear = document.getElementById("btn-clear");
 
-const deviceNameSpan = document.getElementById("device-name");
-
+const statusDiv = document.getElementById("bluetoothStatus");
 const basicSensorList = document.getElementById("basic-sensor-list");
-const pinSensorList   = document.getElementById("pin-sensor-list");
+const pinSensorList = document.getElementById("pin-sensor-list");
 
-const tableHead      = document.getElementById("data-table-head");
-const tableBody      = document.getElementById("data-table-body");
+const tableHead = document.getElementById("data-table-head");
+const tableBody = document.getElementById("data-table-body");
 const tableContainer = document.getElementById("table-container");
 
 const chkKeepScreenOn = document.getElementById("chk-keep-screen-on");
-const keepScreenHint  = document.getElementById("keep-screen-on-hint");
+const keepScreenHint = document.getElementById("keep-screen-on-hint");
 
 // ===============================
-// Chart.js (점 제거 라인 그래프)
+// Chart.js Setup
 // ===============================
 const COLOR_PALETTE = [
-  "#2563eb", "#f97316", "#22c55e",
-  "#e11d48", "#a855f7", "#0ea5e9", "#facc15"
+  "#111111", "#EA4335", "#2563EB", "#137333", 
+  "#D97706", "#9333EA", "#0891B2"
 ];
 
 function getColor(i) {
@@ -52,11 +53,17 @@ const chart = new Chart(ctx, {
   data: { labels: [], datasets: [] },
   options: {
     responsive: true,
+    maintainAspectRatio: false,
     animation: false,
-    plugins: { legend: { position: "bottom" } },
-    scales: { y: { beginAtZero: false } },
+    plugins: { 
+        legend: { position: "top", labels: { usePointStyle: true, boxWidth: 6 } } 
+    },
+    scales: { 
+        x: { grid: { display: false }, ticks: { display: false } }, // X축 깔끔하게
+        y: { beginAtZero: false, border: { dash: [4, 4] } } 
+    },
     elements: {
-      point: { radius: 0 },            // ★ 점 제거
+      point: { radius: 0 },
       line: { borderWidth: 2, tension: 0.1 }
     }
   }
@@ -69,41 +76,40 @@ function resetChart() {
 }
 
 function rebuildChart() {
-  const enabledKeys = Object.keys(sensorRegistry).filter(
-    key => sensorRegistry[key].enabled
-  );
-
+  const enabledKeys = Object.keys(sensorRegistry).filter(key => sensorRegistry[key].enabled);
   const slice = records.slice(-MAX_POINTS);
 
-  chart.data.labels = slice.map(r =>
-    r.timestamp.toLocaleTimeString()
-  );
-
+  chart.data.labels = slice.map(r => r.timestamp.toLocaleTimeString());
   chart.data.datasets = enabledKeys.map((key, idx) => ({
     label: sensorRegistry[key].label,
     data: slice.map(r => r.values[key] ?? null),
     borderColor: getColor(idx),
-    backgroundColor: getColor(idx)
+    backgroundColor: getColor(idx),
+    borderWidth: 2
   }));
-
   chart.update("none");
 }
 
 // ===============================
-// 센서 UI & 등록
+// UI Updates
 // ===============================
-function prettyLabel(key) {
-  const map = {
-    TEMP: "Temperature (°C)",
-    Temperature: "Temperature (°C)",
-    LIGHT: "Light",
-    ACCX: "Accel X",
-    ACCY: "Accel Y",
-    ACCZ: "Accel Z",
-    SOUND: "Sound Level",
-    HEAD: "Compass"
-  };
-  return map[key] || key;
+function updateStatusUI(status, deviceName = "") {
+    if (status === "connected") {
+        statusDiv.innerHTML = `상태: ${deviceName} 연결됨`;
+        statusDiv.classList.add("status-connected");
+        statusDiv.classList.remove("status-error");
+        btnConnect.textContent = "연결 해제";
+        btnConnect.classList.replace("start-button", "stop-button");
+    } else if (status === "error") {
+        statusDiv.innerHTML = `상태: 연결 실패 (다시 시도)`;
+        statusDiv.classList.add("status-error");
+    } else {
+        statusDiv.innerHTML = `상태: 연결 대기 중`;
+        statusDiv.classList.remove("status-connected");
+        statusDiv.classList.remove("status-error");
+        btnConnect.textContent = "기기 연결";
+        btnConnect.classList.replace("stop-button", "start-button");
+    }
 }
 
 function renderSensorCheckboxes() {
@@ -116,12 +122,13 @@ function renderSensorCheckboxes() {
     const sensor = sensorRegistry[key];
     const container = sensor.type === "pin" ? pinSensorList : basicSensorList;
 
-    const label = document.createElement("label");
-    label.className = "inline-flex items-center gap-1";
+    const wrapper = document.createElement("div");
+    // 순수 CSS 클래스 사용
+    wrapper.style.cssText = "display:flex; align-items:center; gap:4px; padding:4px 8px; border:1px solid #eee; border-radius:4px; background:#fafafa;";
 
     const cb = document.createElement("input");
     cb.type = "checkbox";
-    cb.className = "w-4 h-4";
+    cb.style.cssText = "width:16px; height:16px; accent-color:black;";
     cb.checked = sensor.enabled;
 
     cb.addEventListener("change", () => {
@@ -132,23 +139,21 @@ function renderSensorCheckboxes() {
 
     const span = document.createElement("span");
     span.textContent = sensor.label;
-    span.className =
-      "cursor-pointer underline decoration-dotted decoration-slate-300";
+    span.style.cssText = "font-size:0.85rem; cursor:pointer; text-decoration:underline; text-decoration-style:dotted; color:#333;";
 
     span.addEventListener("click", () => {
       const newName = prompt("센서 이름 변경:", sensor.label);
-      if (!newName) return;
-      const trimmed = newName.trim();
-      if (trimmed) sensor.label = trimmed;
-
-      renderSensorCheckboxes();
-      renderTableHeader();
-      rebuildChart();
+      if (newName) {
+        sensor.label = newName.trim();
+        renderSensorCheckboxes();
+        renderTableHeader();
+        rebuildChart();
+      }
     });
 
-    label.appendChild(cb);
-    label.appendChild(span);
-    container.appendChild(label);
+    wrapper.appendChild(cb);
+    wrapper.appendChild(span);
+    container.appendChild(wrapper);
   }
 }
 
@@ -157,80 +162,71 @@ function renderTableHeader() {
   const tr = document.createElement("tr");
 
   const thTime = document.createElement("th");
-  thTime.textContent = "Timestamp";
-  thTime.className = "px-2 py-1 border";
+  thTime.textContent = "Time";
   tr.appendChild(thTime);
 
   for (const key of Object.keys(sensorRegistry).sort()) {
     const sensor = sensorRegistry[key];
     if (!sensor.enabled) continue;
-
     const th = document.createElement("th");
     th.textContent = sensor.label;
-    th.className = "px-2 py-1 border";
     tr.appendChild(th);
   }
-
   tableHead.appendChild(tr);
 }
 
 function appendTableRow(record) {
   const tr = document.createElement("tr");
-
   const tdTime = document.createElement("td");
   tdTime.textContent = record.timestamp.toLocaleTimeString();
-  tdTime.className = "px-2 py-1 border";
   tr.appendChild(tdTime);
 
   for (const key of Object.keys(sensorRegistry).sort()) {
     const sensor = sensorRegistry[key];
     if (!sensor.enabled) continue;
-
     const td = document.createElement("td");
     td.textContent = record.values[key] ?? "";
-    td.className = "px-2 py-1 border text-right";
     tr.appendChild(td);
   }
-
   tableBody.appendChild(tr);
   tableContainer.scrollTop = tableContainer.scrollHeight;
 }
 
 function registerSensors(values) {
+  let isNew = false;
   for (const key of Object.keys(values)) {
     if (!sensorRegistry[key]) {
       sensorRegistry[key] = {
         key,
-        label: prettyLabel(key),
+        label: key,
         type: key.startsWith("P") ? "pin" : "basic",
         enabled: true
       };
+      isNew = true;
     }
   }
-  renderSensorCheckboxes();
-  renderTableHeader();
+  if (isNew) {
+      renderSensorCheckboxes();
+      renderTableHeader();
+  }
 }
 
 // ===============================
-// 데이터 파싱
+// Data Logic & BLE
 // ===============================
 function parseDataLine(line) {
   const obj = {};
   const parts = line.split(";");
   for (const p of parts) {
     const [k, v] = p.split("=");
-    if (!k || !v) continue;
-
-    const key = k.trim();
-    const num = Number(v.trim());
-    if (!Number.isNaN(num)) obj[key] = num;
+    if (k && v) {
+        const num = Number(v.trim());
+        if (!Number.isNaN(num)) obj[k.trim()] = num;
+    }
   }
   return obj;
 }
 
-// ===============================
-// BLE UART
-// ===============================
 const UART_SERVICE = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
 const UART_TX      = "6e400002-b5a3-f393-e0a9-e50e24dcca9e";
 
@@ -243,7 +239,6 @@ async function connectBle() {
     alert("Chrome 또는 Edge 브라우저에서 실행해주세요.");
     return;
   }
-
   try {
     const device = await navigator.bluetooth.requestDevice({
       filters: [{ namePrefix: "BBC micro:bit" }],
@@ -251,8 +246,6 @@ async function connectBle() {
     });
 
     bleDevice = device;
-    deviceNameSpan.textContent = device.name || "micro:bit";
-
     const server = await device.gatt.connect();
     const service = await server.getPrimaryService(UART_SERVICE);
     txChar = await service.getCharacteristic(UART_TX);
@@ -260,64 +253,58 @@ async function connectBle() {
     await txChar.startNotifications();
     txChar.addEventListener("characteristicvaluechanged", onBleNotify);
 
-    btnConnect.textContent = "Disconnect";
-
+    updateStatusUI("connected", device.name);
     bleDevice.addEventListener("gattserverdisconnected", () => {
       bleDevice = null;
       txChar = null;
-      deviceNameSpan.textContent = "";
-      btnConnect.textContent = "Connect";
+      updateStatusUI("disconnected");
       stopLogging();
     });
-
   } catch (err) {
-    alert("BLE 연결 실패: " + err);
+    console.error(err);
+    updateStatusUI("error");
   }
 }
 
 function onBleNotify(event) {
   const chunk = new TextDecoder().decode(event.target.value);
   bleBuffer += chunk;
-
   let idx;
   while ((idx = bleBuffer.indexOf("\n")) >= 0) {
     const line = bleBuffer.slice(0, idx).trim();
     bleBuffer = bleBuffer.slice(idx + 1);
-
     if (!line) continue;
-
+    
     const values = parseDataLine(line);
-    if (Object.keys(values).length === 0) continue;
-
-    registerSensors(values);
-
-    if (isLogging) {
-      const record = { timestamp: new Date(), values };
-      records.push(record);
-      appendTableRow(record);
-      rebuildChart();
+    if (Object.keys(values).length > 0) {
+        registerSensors(values);
+        if (isLogging) {
+            const record = { timestamp: new Date(), values };
+            records.push(record);
+            appendTableRow(record);
+            rebuildChart();
+        }
     }
   }
 }
 
 // ===============================
-// 로깅 & Wake Lock
+// Controls
 // ===============================
 async function startLogging() {
   if (!isBleConnected()) {
-    alert("micro:bit와 먼저 연결해주세요.");
+    alert("먼저 마이크로비트와 연결해주세요.");
     return;
   }
-
   isLogging = true;
   btnStart.disabled = true;
   btnStop.disabled = false;
-
   if (chkKeepScreenOn.checked && navigator.wakeLock) {
     try {
       wakeLock = await navigator.wakeLock.request("screen");
+      keepScreenHint.textContent = "(화면 켜짐 유지 중)";
     } catch (e) {
-      keepScreenHint.textContent = "화면 유지 기능이 지원되지 않습니다.";
+      keepScreenHint.textContent = "지원 불가";
     }
   }
 }
@@ -326,62 +313,34 @@ async function stopLogging() {
   isLogging = false;
   btnStart.disabled = false;
   btnStop.disabled = true;
-
-  if (wakeLock) {
-    try { await wakeLock.release(); } catch {}
-    wakeLock = null;
-  }
+  keepScreenHint.textContent = "";
+  if (wakeLock) { try { await wakeLock.release(); } catch {} wakeLock = null; }
 }
 
-// ===============================
-// 엑셀 다운로드
-// ===============================
 function downloadExcel() {
   if (records.length === 0) {
-    alert("다운로드할 데이터가 없습니다.");
+    alert("저장할 데이터가 없습니다.");
     return;
   }
-
   const keys = Object.keys(sensorRegistry).sort();
-  const rows = [];
-
-  rows.push(["Timestamp", ...keys.map(k => sensorRegistry[k].label)]);
-
+  const rows = [ ["Timestamp", ...keys.map(k => sensorRegistry[k].label)] ];
   for (const r of records) {
-    rows.push([
-      r.timestamp.toLocaleString(),
-      ...keys.map(k => r.values[k] ?? "")
-    ]);
+    rows.push([ r.timestamp.toLocaleString(), ...keys.map(k => r.values[k] ?? "") ]);
   }
-
   const ws = XLSX.utils.aoa_to_sheet(rows);
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Data");
-
-  const filename =
-    "microbit_data_" +
-    new Date().toISOString().replace(/[:.]/g, "-") +
-    ".xlsx";
-
+  XLSX.utils.book_append_sheet(wb, ws, "SensorData");
+  const filename = "BoundaryX_Log_" + new Date().toISOString().slice(0,19).replace(/[:T]/g, "-") + ".xlsx";
   XLSX.writeFile(wb, filename);
 }
 
 // ===============================
-// 이벤트 바인딩
+// Event Listeners
 // ===============================
-btnConnect.addEventListener("click", () => {
-  if (isBleConnected()) {
-    bleDevice.gatt.disconnect();
-  } else {
-    connectBle();
-  }
-});
-
+btnConnect.addEventListener("click", () => isBleConnected() ? bleDevice.gatt.disconnect() : connectBle());
 btnStart.addEventListener("click", startLogging);
 btnStop.addEventListener("click", stopLogging);
-
 btnDownload.addEventListener("click", downloadExcel);
-
 btnClear.addEventListener("click", () => {
   records.length = 0;
   tableBody.innerHTML = "";
