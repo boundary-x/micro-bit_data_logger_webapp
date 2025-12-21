@@ -18,6 +18,7 @@ const MAX_POINTS = 100;
 // DOM Elements
 // ===============================
 const btnConnect = document.getElementById("btn-connect");
+const btnDisconnect = document.getElementById("btn-disconnect"); // 연결 해제 버튼
 const btnStart = document.getElementById("btn-start");
 const btnStop = document.getElementById("btn-stop");
 const btnDownload = document.getElementById("btn-download");
@@ -59,7 +60,7 @@ const chart = new Chart(ctx, {
         legend: { position: "top", labels: { usePointStyle: true, boxWidth: 6 } } 
     },
     scales: { 
-        x: { grid: { display: false }, ticks: { display: false } }, // X축 깔끔하게
+        x: { grid: { display: false }, ticks: { display: false } },
         y: { beginAtZero: false, border: { dash: [4, 4] } } 
     },
     elements: {
@@ -91,24 +92,34 @@ function rebuildChart() {
 }
 
 // ===============================
-// UI Updates
+// UI Updates (버튼 로직)
 // ===============================
 function updateStatusUI(status, deviceName = "") {
     if (status === "connected") {
         statusDiv.innerHTML = `상태: ${deviceName} 연결됨`;
         statusDiv.classList.add("status-connected");
         statusDiv.classList.remove("status-error");
-        btnConnect.textContent = "연결 해제";
-        btnConnect.classList.replace("start-button", "stop-button");
+        
+        // 연결 상태: [연결 비활성] / [해제 활성]
+        btnConnect.disabled = true;
+        btnDisconnect.disabled = false;
+        
     } else if (status === "error") {
         statusDiv.innerHTML = `상태: 연결 실패 (다시 시도)`;
         statusDiv.classList.add("status-error");
+        
+        // 에러 상태: [연결 활성] / [해제 비활성]
+        btnConnect.disabled = false;
+        btnDisconnect.disabled = true;
+        
     } else {
         statusDiv.innerHTML = `상태: 연결 대기 중`;
         statusDiv.classList.remove("status-connected");
         statusDiv.classList.remove("status-error");
-        btnConnect.textContent = "기기 연결";
-        btnConnect.classList.replace("stop-button", "start-button");
+        
+        // 대기 상태: [연결 활성] / [해제 비활성]
+        btnConnect.disabled = false;
+        btnDisconnect.disabled = true;
     }
 }
 
@@ -123,7 +134,6 @@ function renderSensorCheckboxes() {
     const container = sensor.type === "pin" ? pinSensorList : basicSensorList;
 
     const wrapper = document.createElement("div");
-    // 순수 CSS 클래스 사용
     wrapper.style.cssText = "display:flex; align-items:center; gap:4px; padding:4px 8px; border:1px solid #eee; border-radius:4px; background:#fafafa;";
 
     const cb = document.createElement("input");
@@ -160,7 +170,6 @@ function renderSensorCheckboxes() {
 function renderTableHeader() {
   tableHead.innerHTML = "";
   const tr = document.createElement("tr");
-
   const thTime = document.createElement("th");
   thTime.textContent = "Time";
   tr.appendChild(thTime);
@@ -266,6 +275,12 @@ async function connectBle() {
   }
 }
 
+function disconnectBle() {
+    if (isBleConnected()) {
+        bleDevice.gatt.disconnect();
+    }
+}
+
 function onBleNotify(event) {
   const chunk = new TextDecoder().decode(event.target.value);
   bleBuffer += chunk;
@@ -337,7 +352,9 @@ function downloadExcel() {
 // ===============================
 // Event Listeners
 // ===============================
-btnConnect.addEventListener("click", () => isBleConnected() ? bleDevice.gatt.disconnect() : connectBle());
+btnConnect.addEventListener("click", connectBle);
+btnDisconnect.addEventListener("click", disconnectBle);
+
 btnStart.addEventListener("click", startLogging);
 btnStop.addEventListener("click", stopLogging);
 btnDownload.addEventListener("click", downloadExcel);
