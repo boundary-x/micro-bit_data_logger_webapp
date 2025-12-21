@@ -1,4 +1,4 @@
-// main.js - Boundary X Bluetooth Data Streamer Logic
+// main.js - Boundary X Bluetooth Data Streamer (Line Width: Thin)
 
 // ===============================
 // 전역 상태
@@ -18,7 +18,7 @@ const MAX_POINTS = 100;
 // DOM Elements
 // ===============================
 const btnConnect = document.getElementById("btn-connect");
-const btnDisconnect = document.getElementById("btn-disconnect"); // 연결 해제 버튼
+const btnDisconnect = document.getElementById("btn-disconnect");
 const btnStart = document.getElementById("btn-start");
 const btnStop = document.getElementById("btn-stop");
 const btnDownload = document.getElementById("btn-download");
@@ -57,6 +57,7 @@ const chart = new Chart(ctx, {
     maintainAspectRatio: false,
     animation: false,
     plugins: { 
+        // 범례 포인트 스타일 사용
         legend: { position: "top", labels: { usePointStyle: true, boxWidth: 6 } } 
     },
     scales: { 
@@ -64,8 +65,9 @@ const chart = new Chart(ctx, {
         y: { beginAtZero: false, border: { dash: [4, 4] } } 
     },
     elements: {
-      point: { radius: 0 },
-      line: { borderWidth: 2, tension: 0.1 }
+      point: { radius: 0 }, // 데이터 포인트(점) 숨김
+      // [수정] 기본 선 굵기를 1로 설정 (더 얇게)
+      line: { borderWidth: 1, tension: 0.1 } 
     }
   }
 });
@@ -81,18 +83,20 @@ function rebuildChart() {
   const slice = records.slice(-MAX_POINTS);
 
   chart.data.labels = slice.map(r => r.timestamp.toLocaleTimeString());
+  
   chart.data.datasets = enabledKeys.map((key, idx) => ({
     label: sensorRegistry[key].label,
     data: slice.map(r => r.values[key] ?? null),
     borderColor: getColor(idx),
     backgroundColor: getColor(idx),
-    borderWidth: 2
+    // [수정] 데이터셋 개별 선 굵기도 1로 설정
+    borderWidth: 1 
   }));
   chart.update("none");
 }
 
 // ===============================
-// UI Updates (버튼 로직)
+// UI Updates
 // ===============================
 function updateStatusUI(status, deviceName = "") {
     if (status === "connected") {
@@ -100,7 +104,6 @@ function updateStatusUI(status, deviceName = "") {
         statusDiv.classList.add("status-connected");
         statusDiv.classList.remove("status-error");
         
-        // 연결 상태: [연결 비활성] / [해제 활성]
         btnConnect.disabled = true;
         btnDisconnect.disabled = false;
         
@@ -108,7 +111,6 @@ function updateStatusUI(status, deviceName = "") {
         statusDiv.innerHTML = `상태: 연결 실패 (다시 시도)`;
         statusDiv.classList.add("status-error");
         
-        // 에러 상태: [연결 활성] / [해제 비활성]
         btnConnect.disabled = false;
         btnDisconnect.disabled = true;
         
@@ -117,7 +119,6 @@ function updateStatusUI(status, deviceName = "") {
         statusDiv.classList.remove("status-connected");
         statusDiv.classList.remove("status-error");
         
-        // 대기 상태: [연결 활성] / [해제 비활성]
         btnConnect.disabled = false;
         btnDisconnect.disabled = true;
     }
