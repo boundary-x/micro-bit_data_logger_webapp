@@ -1,4 +1,4 @@
-/* style.css - Boundary X: Mobile Layout Fixed */
+/* style.css - Boundary X: Mobile Order Fixed */
 
 :root {
   /* Palette */
@@ -30,7 +30,7 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  overflow-x: hidden; /* 전체 페이지 가로 스크롤 방지 */
+  overflow-x: hidden;
 }
 
 /* Header */
@@ -52,11 +52,11 @@ header {
   text-decoration: none; color: #FFFFFF; border: 1px solid #FFFFFF;
   font-size: 0.9rem; font-weight: 500; padding: 0.5rem 1.2rem;
   border-radius: var(--radius-pill); transition: all 0.2s;
-  white-space: nowrap; /* 텍스트 줄바꿈 방지 */
+  white-space: nowrap;
 }
 .back-button:hover { background: #FFFFFF; color: #000000; }
 
-/* --- Dashboard Layout Core --- */
+/* --- Dashboard Layout Core (순서 변경 핵심) --- */
 main { 
     width: 100%; 
     max-width: 1400px; 
@@ -67,11 +67,23 @@ main {
 }
 
 .dashboard-container {
-    display: grid;
+    display: flex;
+    flex-direction: column;
     gap: 1.5rem;
-    grid-template-columns: 100%; /* 모바일 기본: 1열 꽉 차게 */
     width: 100%;
 }
+
+/* [모바일] 껍데기(sidebar/main)를 무시하고 내용물(control-group)만 꺼내서 순서 재배치 */
+.dashboard-sidebar, .dashboard-main {
+    display: contents; 
+}
+
+/* [모바일] 순서 강제 지정 */
+#group-connect { order: 1; }  /* 1. 기기 연결 */
+#group-settings { order: 2; } /* 2. 센서 설정 */
+#group-monitor { order: 3; }  /* 3. 모니터링 (원래 뒤에 있던 것 앞으로 당김) */
+#group-export { order: 4; }   /* 4. 내보내기 */
+
 
 /* 개별 카드 공통 스타일 */
 .control-group {
@@ -81,7 +93,6 @@ main {
     border: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
-    /* [중요] 모바일 오버플로우 방지 핵심 */
     width: 100%;
     min-width: 0; 
     box-sizing: border-box;
@@ -100,24 +111,27 @@ main {
 }
 .control-group p { color: var(--text-sub); font-size: 0.9rem; margin-bottom: 1rem; }
 
-/* PC Responsive (1024px 이상) */
+/* PC Responsive (1024px 이상) - 여기서 원래 구조로 복구 */
 @media (min-width: 1024px) {
     .dashboard-container {
-        grid-template-columns: 350px 1fr; /* 좌측 고정, 우측 가변 */
+        display: grid; /* Flex에서 Grid로 변경 */
+        grid-template-columns: 350px 1fr;
         align-items: start;
     }
 
+    /* display: contents 해제하고 원래 스타일(Sticky Sidebar) 복구 */
     .dashboard-sidebar {
         display: flex;
         flex-direction: column;
         gap: 1.5rem;
         position: sticky;
         top: 90px;
-        min-width: 0; /* Flex item shrinking fix */
+        min-width: 0;
     }
 
     .dashboard-main {
-        min-width: 0; /* Grid item shrinking fix */
+        display: block; /* 모니터링 영역 복구 */
+        min-width: 0;
     }
 
     .control-group.full-height {
@@ -134,6 +148,9 @@ main {
     .chart-wrapper {
         height: 400px !important;
     }
+    
+    /* PC에서는 order 속성 필요 없음 (구조대로 배치) */
+    #group-connect, #group-settings, #group-monitor, #group-export { order: unset; }
 }
 
 /* --- Components --- */
@@ -142,17 +159,17 @@ main {
 .button-group { 
     display: flex; 
     gap: 10px; 
-    flex-wrap: wrap; /* 버튼이 너무 많으면 줄바꿈 허용 */
+    flex-wrap: wrap; 
     width: 100%;
 }
 button {
     cursor: pointer; border: none; font-size: 0.95rem; font-weight: 600;
     padding: 0.8rem 1.2rem; border-radius: var(--radius-pill); transition: all 0.2s;
     display: inline-flex; align-items: center; justify-content: center;
-    white-space: nowrap; /* 버튼 텍스트 줄바꿈 방지 */
+    white-space: nowrap;
 }
 button:disabled { opacity: 0.5; cursor: not-allowed; }
-.flex-1 { flex: 1; min-width: 100px; /* 버튼 최소 너비 설정 */ }
+.flex-1 { flex: 1; min-width: 100px; }
 
 .start-button { background-color: var(--primary); color: white; }
 .start-button:hover:not(:disabled) { background-color: var(--primary-hover); transform: translateY(-2px); }
@@ -168,7 +185,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   margin-top: 0.5rem; padding: 0.8rem; border-radius: 8px;
   font-size: 0.95rem; text-align: center; font-weight: 700;
   background-color: #fff; color: #333; border: 1px solid var(--border-color);
-  width: 100%; /* 꽉 차게 */
+  width: 100%;
   box-sizing: border-box;
 }
 .status-connected { background-color: #E6F4EA !important; color: var(--success) !important; border-color: var(--success) !important; }
@@ -187,7 +204,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     display: flex; align-items: center; gap: 8px; margin-bottom: 1rem;
     padding: 0.8rem; background: #fff; border-radius: 8px; border: 1px solid var(--border-color);
     width: 100%;
-    flex-wrap: wrap; /* 내용 많으면 줄바꿈 */
+    flex-wrap: wrap;
 }
 .checkbox-wrapper input { width: 18px; height: 18px; accent-color: black; margin-right: 8px; flex-shrink: 0; }
 .checkbox-wrapper label { font-size: 0.9rem; cursor: pointer; font-weight: 500; white-space: nowrap; }
@@ -200,7 +217,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     background: white; border: 1px solid var(--border-color);
     border-radius: 12px; padding: 1.5rem; 
     display: flex; flex-direction: column;
-    /* [중요] 오버플로우 방지 */
     min-width: 0; 
     width: 100%; 
     box-sizing: border-box;
@@ -211,14 +227,14 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     position: relative; 
     height: 250px; 
     width: 100%; 
-    max-width: 100%; /* 차트가 박스 넘어가지 않게 */
+    max-width: 100%;
     overflow: hidden; 
 }
 
 .table-wrapper { 
     height: 300px; 
     overflow-y: auto; 
-    overflow-x: auto; /* 테이블 가로 스크롤 허용 */
+    overflow-x: auto;
     border: 1px solid #eee; 
     border-radius: 8px; 
     width: 100%;
@@ -257,14 +273,12 @@ address { font-style: normal; color: #888; line-height: 1.6; }
   .title { font-size: 1rem; }
   .title img { height: 20px; }
   
-  /* 모바일 패딩 조정 및 100% 강제 */
   main { padding: 1rem; width: 100%; }
   .control-group { padding: 1.2rem; width: 100%; }
   .monitor-box { padding: 1rem; width: 100%; }
   
+  /* 모바일에서 컨테이너 확실하게 정리 */
   .dashboard-container {
-      display: flex; /* Grid 대신 Flex로 단순화 */
-      flex-direction: column;
       width: 100%;
       min-width: 0;
   }
