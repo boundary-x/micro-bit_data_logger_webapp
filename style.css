@@ -1,4 +1,4 @@
-/* style.css - Boundary X: Unified Design System */
+/* style.css - Boundary X: Data Streamer Final */
 
 :root {
   /* Palette */
@@ -13,7 +13,7 @@
   
   --danger: #EA4335;
   --success: #137333;
-  --excel: #1D6F42; /* 엑셀 버튼 전용 */
+  --excel: #1D6F42;
   
   /* Shapes */
   --radius-pill: 50px;
@@ -33,7 +33,7 @@ body {
   flex-direction: column;
 }
 
-/* Header (동일) */
+/* Header */
 header {
   background: #000000;
   border-bottom: 1px solid #333;
@@ -54,7 +54,7 @@ header {
 }
 .back-button:hover { background: #FFFFFF; color: #000000; }
 
-/* Main Layout (동일) */
+/* Main Layout */
 main { width: 100%; max-width: 1000px; margin: 0 auto; padding: 3rem 1.5rem; flex: 1; }
 .controls { display: flex; flex-direction: column; gap: 32px; }
 
@@ -80,7 +80,7 @@ main { width: 100%; max-width: 1000px; margin: 0 auto; padding: 3rem 1.5rem; fle
 
 .control-group p { color: var(--text-sub); font-size: 0.95rem; margin-bottom: 1.5rem; }
 
-/* Buttons (동일 + full-width 추가) */
+/* Buttons */
 .button-group { display: flex; gap: 12px; flex-wrap: wrap; }
 button {
   cursor: pointer; border: none; font-size: 0.95rem; font-weight: 600;
@@ -88,7 +88,6 @@ button {
   display: inline-flex; align-items: center; justify-content: center;
 }
 button:disabled { opacity: 0.5; cursor: not-allowed; }
-.full-width { flex: 1; width: 100%; }
 .flex-1 { flex: 1; }
 
 .start-button { background-color: var(--primary); color: white; }
@@ -100,7 +99,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .excel-button { background-color: transparent; color: var(--excel); border: 1px solid var(--excel); }
 .excel-button:hover:not(:disabled) { background-color: var(--excel); color: white; transform: translateY(-2px); }
 
-/* Status Messages (동일) */
+/* Status Messages */
 #bluetoothStatus {
   margin-top: 1rem; padding: 1rem; border-radius: var(--radius-card);
   font-size: 1rem; text-align: center; font-weight: 700;
@@ -109,9 +108,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .status-connected { background-color: #E6F4EA !important; color: var(--success) !important; border-color: var(--success) !important; }
 .status-error { background-color: #FCE8E6 !important; color: var(--danger) !important; border-color: var(--danger) !important; }
 
-/* --- Data Streamer Specific Styles (New) --- */
-
-/* Sensor Configuration Box */
+/* Sensor Config */
 .sensor-config-box {
     background: #fff; border: 1px solid var(--border-color);
     border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;
@@ -123,38 +120,46 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .sensor-list { display: flex; flex-wrap: wrap; gap: 10px; }
 .guide-text { font-size: 0.8rem; color: #999; margin-top: 0.5rem; }
 
-/* Custom Checkbox Wrapper */
 .checkbox-wrapper {
-    display: flex; items-center; gap: 8px; margin-bottom: 1.5rem;
+    display: flex; align-items: center; gap: 8px; margin-bottom: 1.5rem;
     padding: 0.8rem; background: #fff; border-radius: 8px; border: 1px solid var(--border-color);
-    align-items: center;
 }
 .checkbox-wrapper input { width: 18px; height: 18px; accent-color: black; margin-right: 8px; }
 .checkbox-wrapper label { font-size: 0.95rem; cursor: pointer; font-weight: 500; }
 #keep-screen-on-hint { font-size: 0.8rem; color: var(--danger); margin-left: auto; }
 
-/* Monitor Grid (Responsive) */
+/* Monitor Grid (Responsive Fixes) */
 .monitor-grid {
     display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;
 }
+
 .monitor-box {
     background: white; border: 1px solid var(--border-color);
-    border-radius: 12px; padding: 1.5rem; display: flex; flex-direction: column;
+    border-radius: 12px; padding: 1.5rem; 
+    display: flex; flex-direction: column;
+    /* [중요] 모바일 오버플로우 방지 */
+    min-width: 0; width: 100%;
 }
 .monitor-box h4 { font-size: 1rem; font-weight: 700; margin-bottom: 1rem; }
-.chart-wrapper { position: relative; height: 300px; width: 100%; }
-.table-wrapper { height: 300px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px; }
 
-/* Data Table */
+.chart-wrapper { position: relative; height: 300px; width: 100%; }
+
+.table-wrapper { 
+    height: 300px; overflow-y: auto; 
+    /* [중요] 테이블 가로 스크롤 허용 */
+    overflow-x: auto;
+    border: 1px solid #eee; border-radius: 8px; width: 100%;
+}
+
 .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
 .data-table th { 
     position: sticky; top: 0; background: #f9fafb; z-index: 10;
-    padding: 8px; text-align: left; border-bottom: 1px solid #ddd; font-weight: 600;
+    padding: 8px; text-align: left; border-bottom: 1px solid #ddd; font-weight: 600; white-space: nowrap;
 }
-.data-table td { padding: 8px; border-bottom: 1px solid #eee; font-family: monospace; }
+.data-table td { padding: 8px; border-bottom: 1px solid #eee; font-family: monospace; white-space: nowrap; }
 .data-table td:not(:first-child) { text-align: right; }
 
-/* Footer (동일) */
+/* Footer */
 footer { background-color: #000000; color: #FFFFFF; padding: 4rem 5vw 4rem; border-top: 1px solid #222; margin-top: auto; font-size: 0.9rem; }
 .footer-container { max-width: 1000px; margin: 0 auto; display: flex; flex-direction: column; }
 .footer-top { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4rem; }
@@ -175,8 +180,14 @@ address { font-style: normal; color: #888; line-height: 1.6; }
 @media (max-width: 768px) {
   .footer-top { flex-direction: column; gap: 3rem; }
   .footer-links { gap: 2.5rem; flex-direction: column; }
-  .monitor-grid { grid-template-columns: 1fr; } /* 모바일에서 그래프/테이블 세로 배치 */
+  
+  /* 모바일 그래프/테이블 세로 배치 */
+  .monitor-grid { grid-template-columns: 1fr; } 
+  
   .title { font-size: 1rem; }
   .title img { height: 20px; }
-  .control-group { padding: 1.5rem; }
+  
+  /* 모바일 패딩 축소 */
+  .control-group { padding: 1.5rem 1rem; }
+  .monitor-box { padding: 1rem; }
 }
