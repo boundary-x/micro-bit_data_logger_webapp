@@ -1,125 +1,147 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8" />
-  <title>Micro:bit 데이터 로거</title>
-
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Chart.js -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>바운더리엑스 블루투스 데이터 스트리머</title>
+  
+  <link rel="icon" href="https://raw.githubusercontent.com/boundary-x/ai_teachable_machine/refs/heads/main/Favicon.png"/>
+  
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <!-- SheetJS (xlsx) -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
-  <!-- 커스텀 스타일 -->
-  <link rel="stylesheet" href="style.css" />
+  
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
+  <link rel="stylesheet" type="text/css" href="style.css">
 </head>
+<body>
 
-<body class="bg-slate-50 min-h-screen flex flex-col">
-
-  <!-- HEADER -->
-  <header class="flex items-center justify-between px-4 py-3 bg-white shadow">
-    <h1 class="text-lg font-semibold">Micro:bit 데이터 로거</h1>
-
-    <div class="flex items-center gap-2">
-      <button id="btn-connect"
-              class="px-3 py-1.5 rounded text-sm bg-blue-500 text-white">
-        Connect
-      </button>
-      <span id="device-name"
-            class="text-xs text-blue-600 font-semibold"></span>
+  <header>
+    <div class="title">
+      <a href="https://boundaryx.io">
+        <img src="https://raw.githubusercontent.com/boundary-x/ai_voice_recognition/refs/heads/main/boundaryx_logo.png" alt="Logo">
+      </a>
+      블루투스 데이터 스트리머
     </div>
+    <a href="https://boundaryx.io/59" class="back-button">돌아가기</a>
   </header>
 
-  <!-- MAIN -->
-  <main class="flex-1 p-4 space-y-4">
-
-    <!-- SENSOR SELECT PANEL -->
-    <section class="bg-white rounded-xl shadow p-4 space-y-3">
-      <h2 class="font-semibold text-sm mb-1">센서 선택</h2>
-
-      <div>
-        <p class="text-xs text-slate-500 mb-1">자동 감지 센서</p>
-        <div id="basic-sensor-list" class="flex flex-wrap gap-3 text-sm"></div>
+  <main>
+    <section class="controls">
+      
+      <div class="control-group">
+        <h3>1. 기기 연결</h3>
+        <p>마이크로비트와 블루투스로 연결하여 센서 데이터를 수신합니다.</p>
+        
+        <div id="bluetoothStatus">상태: 연결 대기 중</div>
+        <div class="button-group" style="margin-top: 1.5rem;">
+          <button id="btn-connect" class="start-button full-width">기기 연결</button>
+        </div>
       </div>
 
-      <div>
-        <p class="text-xs text-slate-500 mb-1">핀(P0, P1, P2...) 센서</p>
-        <div id="pin-sensor-list" class="flex flex-wrap gap-3 text-sm"></div>
+      <div class="control-group">
+        <h3>2. 센서 및 로깅 설정</h3>
+        <p>수집할 데이터 종류를 선택하고 기록을 시작하세요.</p>
+
+        <div class="sensor-config-box">
+            <div class="sensor-category">
+                <span class="category-title">기본 센서 (자동 감지)</span>
+                <div id="basic-sensor-list" class="sensor-list"></div>
+            </div>
+            <div class="sensor-category">
+                <span class="category-title">확장 핀 (P0, P1...)</span>
+                <div id="pin-sensor-list" class="sensor-list"></div>
+            </div>
+            <p class="guide-text">* 센서 이름을 클릭하면 변경할 수 있습니다.</p>
+        </div>
+
+        <div class="checkbox-wrapper">
+            <input id="chk-keep-screen-on" type="checkbox">
+            <label for="chk-keep-screen-on">데이터 수집 중 화면 켜짐 유지</label>
+            <span id="keep-screen-on-hint"></span>
+        </div>
+
+        <div class="button-group">
+            <button id="btn-start" class="start-button flex-1">Start Logging</button>
+            <button id="btn-stop" class="stop-button flex-1" disabled>Stop</button>
+        </div>
       </div>
 
-      <div class="flex items-center gap-2 pt-2 border-t border-slate-200">
-        <input id="chk-keep-screen-on" type="checkbox" class="w-4 h-4">
-        <label for="chk-keep-screen-on" class="text-xs">
-          로깅 중 화면 꺼짐 방지하기
-        </label>
-        <span id="keep-screen-on-hint"
-              class="text-[11px] text-slate-400 ml-1"></span>
+      <div class="control-group">
+        <h3>3. 데이터 모니터링</h3>
+        <p>실시간 그래프와 데이터 테이블을 확인합니다.</p>
+
+        <div class="monitor-grid">
+            <div class="monitor-box">
+                <h4>실시간 그래프</h4>
+                <div class="chart-wrapper">
+                    <canvas id="chart-canvas"></canvas>
+                </div>
+            </div>
+
+            <div class="monitor-box">
+                <h4>데이터 테이블</h4>
+                <div id="table-container" class="table-wrapper">
+                    <table class="data-table">
+                        <thead id="data-table-head"></thead>
+                        <tbody id="data-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
       </div>
 
-      <div class="flex items-center gap-2 pt-2 border-t border-slate-200">
-        <button id="btn-start"
-                class="px-3 py-1.5 rounded text-sm bg-emerald-500 text-white">
-          Start Logging
-        </button>
-        <button id="btn-stop"
-                class="px-3 py-1.5 rounded text-sm bg-slate-300 text-slate-700"
-                disabled>
-          Stop
-        </button>
-      </div>
-
-      <p class="text-[11px] text-slate-400">
-        센서 이름을 클릭하면 라벨을 수정할 수 있어요. (예: P0 → 토양 수분 센서)
-      </p>
-    </section>
-
-    <!-- GRAPH + TABLE -->
-    <section class="grid gap-4 md:grid-cols-2">
-
-      <!-- GRAPH -->
-      <div class="bg-white rounded-xl shadow p-4">
-        <h2 class="font-semibold text-sm mb-2">실시간 그래프</h2>
-        <canvas id="chart-canvas"
-                class="w-full h-56 md:h-64 lg:h-72"></canvas>
-      </div>
-
-      <!-- TABLE -->
-      <div class="bg-white rounded-xl shadow p-4">
-        <h2 class="font-semibold text-sm mb-2">데이터 테이블</h2>
-        <div id="table-container"
-             class="overflow-auto max-h-64 md:max-h-72 lg:max-h-80">
-          <table class="min-w-full text-xs border border-slate-200">
-            <thead id="data-table-head" class="bg-slate-100"></thead>
-            <tbody id="data-table-body"></tbody>
-          </table>
+      <div class="control-group">
+        <h3>4. 데이터 저장</h3>
+        <p>수집된 데이터를 엑셀 파일로 저장하거나 초기화합니다.</p>
+        <div class="button-group">
+            <button id="btn-download" class="excel-button flex-1">엑셀(.xlsx) 다운로드</button>
+            <button id="btn-clear" class="stop-button flex-1" style="color: #333; border-color: #333;">데이터 초기화</button>
         </div>
       </div>
 
     </section>
-
-    <!-- EXPORT & RESET -->
-    <section class="flex flex-wrap items-center gap-2">
-      <button id="btn-download"
-              class="px-3 py-1.5 rounded text-sm bg-indigo-500 text-white">
-        엑셀(xlsx)로 다운로드
-      </button>
-
-      <button id="btn-clear"
-              class="px-3 py-1.5 rounded text-sm bg-slate-200 text-slate-700">
-        데이터 초기화
-      </button>
-    </section>
-
   </main>
 
-  <!-- FOOTER -->
-  <footer class="px-4 py-2 text-[11px] text-slate-400 bg-slate-100">
-    BoundaryX · Micro:bit 데이터 로거 v1.0  
-    (Chrome/Edge 브라우저 권장, Web Bluetooth 기반)
+  <footer>
+    <div class="footer-container">
+      <div class="footer-top">
+        <div class="footer-info">
+          <h2 class="footer-logo">바운더리엑스</h2>
+          <p class="slogan">"우리는 산업과 교육의 경계를 허물고, 미래 기술을 교실의 책상 위로 옮기는 사람들입니다"</p>
+          <address>
+            <p>경기도 의왕시 안양판교로 82(유니콘로드), 811호</p>
+            <p class="copyright">© 2024 Boundary X Co. All rights reserved.</p>
+          </address>
+        </div>
+
+        <div class="footer-links">
+          <div class="link-column">
+            <h4>제품 소개</h4>
+            <ul>
+              <li>
+                <a href="https://boundaryx.io/shop/?idx=25" target="_blank">AI 비트런</a>
+                <span class="link-desc">마이크로비트 기반 이족보행로봇</span>
+              </li>
+              <li>
+                <a href="https://boundaryx.io/shop/?idx=26" target="_blank">AI 포니봇</a>
+                <span class="link-desc">마이크로비트 기반 모빌리티로봇</span>
+              </li>
+            </ul>
+          </div>
+          <div class="link-column">
+            <h4>고객 지원</h4>
+            <ul>
+              <li>
+                <a href="https://boundaryx.io/contact" target="_blank">문의처</a>
+                <span class="link-desc">제품 문의 | 제휴 문의 | 연수 문의</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
   </footer>
 
-  <!-- 메인 스크립트 -->
   <script src="main.js"></script>
 </body>
 </html>
